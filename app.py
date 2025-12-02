@@ -223,8 +223,8 @@ with col1:
 
 with col2:
     st.subheader("Billed To")
-    client_name = st.text_input("Client Name", "ASHWAGHOSH SHREEKRUSHNA SHIRSAT")
-    client_address = st.text_area("Client Address", "B-1903, MANAVSTHAL, MAHAKALI ROAD\nMALVANI, Mumbai Suburban\nMaharashtra, India - 400095")
+    client_name = st.text_input("Client Name", "SOL PRODUCTION LLP")
+    client_address = st.text_area("Client Address", "74 Russell House, 2nd Floor, Hasnabad Road, Khar West, Mumbai, Maharashtra 400052")
     client_phone = st.text_input("Client Phone", "+91 9876543216")
     client_gst = st.text_input("Client GSTIN", "6A1ZZ")
     st.divider()
@@ -243,7 +243,7 @@ with p_col2:
 st.subheader("Invoice Items")
 default_items = pd.DataFrame([
     {"Description": "23rd Sept to 30 sept", "Amount": 40000.0},
-    {"Description": "1st Oct to 25th Oct", "Amount": 125000.0},
+    {"Description": "GST", "Amount": 766 },
 ])
 items_df = st.data_editor(default_items, num_rows="dynamic", use_container_width=True)
 

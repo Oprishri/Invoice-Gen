@@ -4,6 +4,8 @@ import pandas as pd
 import datetime
 from num2words import num2words
 import tempfile
+import numpy as np
+
 import os
 
 # --- HELPER: Save Uploaded File to Temp ---
@@ -26,8 +28,8 @@ class InvoicePDF(FPDF):
         self.set_y(-15)
         self.set_font('Arial', 'I', 7) # Smaller font for footer
         self.set_text_color(128, 128, 128)
-        self.cell(0, 4, '*This is computer generated invoice no physical signature required.', 0, 1, 'C')
-        self.cell(0, 4, 'Digital signature is valid.', 0, 1, 'C')
+        #self.cell(0, 4, '*This is computer generated invoice no physical signature required.', 0, 1, 'C')
+        #self.cell(0, 4, 'Digital signature is valid.', 0, 1, 'C')
 
 def generate_pdf(invoice_data, items_df, bank_data, totals, logo_path, signature_path):
     # A4 Size = 210mm x 297mm
@@ -100,7 +102,7 @@ def generate_pdf(invoice_data, items_df, bank_data, totals, logo_path, signature
     pdf.set_font('Arial', '', 9)
     pdf.cell(0, 4, invoice_data['client_name'], 0, 1)
     pdf.multi_cell(0, 4, invoice_data['client_address'])
-    pdf.cell(0, 4, f"Phone: {invoice_data['client_phone']}", 0, 1)
+    pdf.cell(0, 4, f"PAN: {invoice_data['client_phone']}", 0, 1)
     pdf.cell(0, 4, f"GSTIN: {invoice_data['client_gst']}", 0, 1)
     
     # Divider
@@ -136,6 +138,8 @@ def generate_pdf(invoice_data, items_df, bank_data, totals, logo_path, signature
     # Rows
     pdf.set_fill_color(255, 255, 255) 
     pdf.set_font('Arial', '', 9)
+    
+
     for index, row in items_df.iterrows():
         pdf.cell(140, 7, str(row['Description']), 1, 0, 'L', 1)
         pdf.cell(50, 7, f"{row['Amount']:,.2f}", 1, 1, 'R', 1)
@@ -163,15 +167,15 @@ def generate_pdf(invoice_data, items_df, bank_data, totals, logo_path, signature
     # Totals (Right)
     pdf.set_xy(130, y_bottom_start)
     pdf.set_font('Arial', '', 9)
-    pdf.cell(30, 5, "Sub Total:", 0, 0, 'R'); pdf.cell(30, 5, f"{totals['subtotal']:,.2f}", 0, 1, 'R')
+    pdf.cell(30, 5, "Sub Total:", 0, 0, 'R'); pdf.cell(30, 5, f"{totals['subtotal']:,.0f}", 0, 1, 'R')
     pdf.set_xy(130, pdf.get_y())
-    pdf.cell(30, 5, "GST (18%):", 0, 0, 'R'); pdf.cell(30, 5, f"{totals['gst']:,.2f}", 0, 1, 'R')
+    pdf.cell(30, 5, "GST (18%):", 0, 0, 'R'); pdf.cell(30, 5, f"{totals['gst']:,.0f}", 0, 1, 'R')
     
     pdf.set_xy(130, pdf.get_y() + 2)
     pdf.set_fill_color(44, 62, 80)
     pdf.set_text_color(255, 255, 255)
     pdf.set_font('Arial', 'B', 11)
-    pdf.cell(60, 8, f" Total: {totals['grand_total']:,.2f} ", 0, 1, 'R', 1)
+    pdf.cell(60, 8, f" Total: {totals['grand_total']:,.0f} ", 0, 1, 'R', 1)
     
     # Words
     pdf.set_text_color(0, 0, 0)
@@ -190,11 +194,12 @@ def generate_pdf(invoice_data, items_df, bank_data, totals, logo_path, signature
 
     pdf.set_xy(120, sig_y_fixed)
     pdf.set_font('Arial', 'B', 9)
-    pdf.cell(70, 5, f"For {invoice_data['billed_by_name']}", 0, 1, 'R')
+    pdf.cell(70, 5, f"From {invoice_data['billed_by_name']}", 0, 1, 'R')
     pdf.set_xy(120, pdf.get_y())
     pdf.cell(70, 5, invoice_data['sender_person'], 0, 1, 'R')
     pdf.set_font('Arial', '', 8)
-    pdf.cell(70, 4, "(Proprietor)", 0, 1, 'R')
+    pdf.cell(180, 4, "(Proprietor)", 4, 4, 'R')
+    #pdf.set_xy(120, pdf.get_y() - 1)
 
     return pdf.output(dest='S').encode('latin-1')
 
@@ -215,35 +220,37 @@ with col1:
     st.subheader("Billed By")
     billed_by_name = st.text_input("Studio Name", "GRAFFITI STUDIO")
     sender_person = st.text_input("Proprietor Name", "RISHI ANAND")
-    sender_address = st.text_area("Your Address", "1004, Nakul Raj CHS LTD, Meeth Chwoky\nMalad West, Maharashtra, India")
-    sender_gst = st.text_input("Your GSTIN", "fdc76f675dcu1")
-    sender_pan = st.text_input("Your PAN", "76543254")
+    sender_address = st.text_area("Your Address", "D-243, Goyla Dairy, Qutub Vihar Ph-1, Samta Enclave, New Delhi-110071")
+    sender_gst = st.text_input("Your GSTIN", "07BAWPA1626B2Z1")
+    sender_pan = st.text_input("Your PAN", "BAWPA1626B")
     sender_email = st.text_input("Email", "rishianand@graffitistudio.in")
-    sender_phone = st.text_input("Your Phone", "+91 9876543210")
+    sender_phone = st.text_input("Your Phone", "+91 9871097871")
 
 with col2:
     st.subheader("Billed To")
     client_name = st.text_input("Client Name", "SOL PRODUCTION LLP")
     client_address = st.text_area("Client Address", "74 Russell House, 2nd Floor, Hasnabad Road, Khar West, Mumbai, Maharashtra 400052")
-    client_phone = st.text_input("Client Phone", "+91 9876543216")
-    client_gst = st.text_input("Client GSTIN", "6A1ZZ")
+    client_phone = st.text_input("Pan No.", "AFPFS6334H ")
+    client_gst = st.text_input("Client GSTIN", "27AFPFS6334H1ZI")
     st.divider()
-    invoice_no = st.text_input("Invoice No", "01")
+    invoice_no = st.text_input("Invoice No", "06")
     invoice_date = st.date_input("Invoice Date", datetime.date.today())
 
 st.subheader("Project Details")
 p_col1, p_col2 = st.columns(2)
 with p_col1:
-    project_name = st.text_input("Project Name", "India's Got Talent Season 11")
-    designation = st.text_input("Designation", "Post Producer")
+    project_name = st.text_input("Project Name", "The great Indian Kapil Show Season 4")
+    designation = st.text_input("Designation", "Senior Post Producer")
+    
 with p_col2:
     service_desc = st.text_input("Service Type", "Audio-visual post-production services")
     hsn_sac = st.text_input("HSN/SAC Code", "999613")
+    
 
 st.subheader("Invoice Items")
 default_items = pd.DataFrame([
-    {"Description": "23rd Sept to 30 sept", "Amount": 40000.0},
-    {"Description": "GST", "Amount": 766 },
+    {"Description": "Monthly salary: 160000", "Amount": 0},
+    {"Description": "5th Nov 2025 to 30th Nov 2025(26days)", "Amount": 138666},
 ])
 items_df = st.data_editor(default_items, num_rows="dynamic", use_container_width=True)
 
@@ -251,8 +258,8 @@ st.subheader("Bank Details")
 b_col1, b_col2 = st.columns(2)
 with b_col1:
     acc_name = st.text_input("Account Name", "GRAFFITI STUDIO")
-    acc_no = st.text_input("Account Number", "345678909876543")
-    ifsc = st.text_input("IFSC Code", "HDFC3456789")
+    acc_no = st.text_input("Account Number", "50200110989706")
+    ifsc = st.text_input("IFSC Code", "HDFC0001357")
 with b_col2:
     bank_name = st.text_input("Bank Name", "HDFC BANK")
     acc_type = st.text_input("Account Type", "Current Account")
@@ -261,7 +268,7 @@ if not items_df.empty:
     subtotal = items_df['Amount'].sum()
     gst_amount = subtotal * 0.18
     grand_total = subtotal + gst_amount
-    total_words = num2words(grand_total, lang='en_IN')
+    total_words = num2words(np.ceil(grand_total), lang='en_IN')
     
     totals = {"subtotal": subtotal, "gst": gst_amount, "grand_total": grand_total, "words": total_words}
     
